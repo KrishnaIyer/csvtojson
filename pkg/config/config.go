@@ -33,8 +33,9 @@ const (
 // Config represents the configuration
 type Config struct {
 	CSVFile string `name:"csv-file" short:"c" description:"input csv file name"`
-	OutFile string `name:"out-file" short:"o" description:"output json file name"`
+	OutFile string `name:"out-file" short:"o" description:"output file name. Use yaml or json based on the required format."`
 	Debug   bool   `name:"debug" short:"d" description:"print detailed logs for errors"`
+	YAML    bool   `name:"yaml" description:"marshal to yaml instead of json"`
 	Parse   csv.Config
 }
 
@@ -53,30 +54,20 @@ func New(name string, cfg Config) *Manager {
 	viper.AutomaticEnv()
 	viper.SetConfigName(name)
 
-	cfgStructType := reflect.TypeOf(cfg)
+	rootStruct := reflect.TypeOf(cfg)
 
-	if cfgStructType.Kind() != reflect.Struct {
+	if rootStruct.Kind() != reflect.Struct {
 		panic("configuration is not a struct")
 	}
 
-	for i := 0; i < cfgStructType.NumField(); i++ {
-		field := cfgStructType.Field(i)
-		name := field.Tag.Get("name")
-		if name == "" || name == "-" {
-			continue
-		}
+	// Parse the root struct separately
+	flags.AddFlagSet(parseStructToFlags(rootStruct))
 
-		desc := field.Tag.Get("description")
-		short := field.Tag.Get("short")
-
-		fieldKind := field.Type.Kind()
-		switch fieldKind {
-		case reflect.String:
-			flags.StringP(name, short, "", desc)
-		case reflect.Bool:
-			flags.BoolP(name, short, false, desc)
-		default:
-			panic(fmt.Errorf("Unknown type in config: %v", fieldKind))
+	// Find embedded structs and parse them. This currently only works one level deep.
+	for i := 0; i < rootStruct.NumField(); i++ {
+		fieldT := rootStruct.Field(i).Type
+		if fieldT.Kind() == reflect.Struct {
+			flags.AddFlagSet(parseStructToFlags(fieldT))
 		}
 	}
 
@@ -112,4 +103,31 @@ func (mgr *Manager) Unmarshal(config interface{}) error {
 // Viper returns viper.
 func (mgr *Manager) Viper() *viper.Viper {
 	return mgr.viper
+}
+
+// parseStructToFlags parses a struct and returns a flagset.
+// It panics if there are parsing errors.
+func parseStructToFlags(strT reflect.Type) *pflag.FlagSet {
+	flags := pflag.FlagSet{}
+	for i := 0; i < strT.NumField(); i++ {
+		field := strT.Field(i)
+		name := field.Tag.Get("name")
+		if name == "" || name == "-" {
+			continue
+		}
+
+		desc := field.Tag.Get("description")
+		short := field.Tag.Get("short")
+
+		fieldKind := field.Type.Kind()
+		switch fieldKind {
+		case reflect.String:
+			flags.StringP(name, short, "", desc)
+		case reflect.Bool:
+			flags.BoolP(name, short, false, desc)
+		default:
+			panic(fmt.Errorf("Unknown type in config: %v", fieldKind))
+		}
+	}
+	return &flags
 }

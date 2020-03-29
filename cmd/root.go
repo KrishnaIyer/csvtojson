@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -64,7 +63,12 @@ var (
 				logger.Fatal(err.Error())
 			}
 
-			marshaled, err := json.Marshal(csv.Values())
+			var marshaled []byte
+			if config.YAML {
+				marshaled, err = csv.MarshalYAML()
+			} else {
+				marshaled, err = csv.MarshalJSON()
+			}
 			if err != nil {
 				logger.Fatal(err.Error())
 			}
