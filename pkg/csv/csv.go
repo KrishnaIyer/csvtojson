@@ -18,48 +18,66 @@ package csv
 import (
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"strings"
 )
 
-var errEmptyKey = errors.New("")
+var errEmptyKey = errors.New("Empty Key")
+
+var errEmptyCSV = errors.New("Empty CSV File")
 
 // CSV is the CSV file.
 type CSV struct {
-	values map[string][]string
+	values []map[string]string
 }
 
-// New parses the file and creates a new CSV object.
-func New(ctx context.Context, fileName string) (*CSV, error) {
-	raw, err := ioutil.ReadFile(fileName)
+// Config are the configuration options for the CSV decoder.
+type Config struct {
+	AllowMalformed bool   `name:"allow-malformed" description:"allow parsing malformed CSV"`
+	FillEmptyWith  string `name:"fill-empty-with" description:"value to fill empty cells with. --allow-malformed must be set for this to be effective"`
+}
+
+// New parses the byte slice and creates a new CSV object.
+func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
+	reader := csv.NewReader(strings.NewReader(string(raw)))
+	if config.AllowMalformed {
+		reader.FieldsPerRecord = -1 // This allows variable number of columns per row.
+	}
+	readValues, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
 	}
-	reader := csv.NewReader(strings.NewReader(string(raw)))
-	values, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
+	if len(readValues) < 2 {
+		return nil, errEmptyCSV
 	}
 
-	csv := &CSV{
-		values: make(map[string][]string),
-	}
-	// Extract the values into a map
-	if len(values) > 0 {
-		keys := values[0]
-		for i, row := range values {
-			if i == 0 {
+	values := make([]map[string]string, 0)
+
+	for i := 1; i < len(readValues); i++ {
+		keys := readValues[0]
+		value := make(map[string]string)
+		for j := 0; j < len(keys); j++ {
+			noOfcolumns := len(readValues[i])
+			if j >= noOfcolumns {
+				value[keys[j]] = config.FillEmptyWith
 				continue
 			}
-			for j, val := range row {
-				key := keys[j]
-				if key == "" {
-					return nil, error
-				}
-				csv.values[key] = append(csv.values[key], val)
-			}
+			value[keys[j]] = readValues[i][j]
 		}
+		values = append(values, value)
 	}
-	return csv, nil
+	return &CSV{
+		values: values,
+	}, nil
+}
+
+// Values returns the map of key:value pairs from the parsed CSV.
+func (csv *CSV) Values() [](map[string]string) {
+	return csv.values
+}
+
+// MarshalJSON marshals the read CSV values into JSON.
+func (csv *CSV) MarshalJSON() ([]byte, error) {
+	return json.Marshal(csv.Values())
 }
