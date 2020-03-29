@@ -17,9 +17,9 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	conf "github.com/KrishnaIyer/csvtojson/pkg/config"
 	"github.com/KrishnaIyer/csvtojson/pkg/csv"
@@ -69,7 +69,18 @@ var (
 				logger.Fatal(err.Error())
 			}
 
-			fmt.Println(string(marshaled))
+			// Write to file
+			file := os.Stdout
+			if config.OutFile != "" {
+				file, err = os.Create(config.OutFile)
+				if err != nil {
+					logger.Fatal(err.Error())
+				}
+			}
+			_, err = file.Write(marshaled)
+			if err != nil {
+				logger.Fatal(err.Error())
+			}
 		},
 	}
 )
