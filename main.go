@@ -14,6 +14,10 @@
 
 package main
 
-func main(){
+import (
+	"github.com/KrishnaIyer/csvtojson/cmd"
+)
 
+func main() {
+	cmd.Execute()
 }
