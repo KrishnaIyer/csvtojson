@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 var errEmptyKey = errors.New("Empty Key")
@@ -80,4 +82,9 @@ func (csv *CSV) Values() [](map[string]string) {
 // MarshalJSON marshals the read CSV values into JSON.
 func (csv *CSV) MarshalJSON() ([]byte, error) {
 	return json.Marshal(csv.Values())
+}
+
+// MarshalYAML marshals the read CSV values into YAML.
+func (csv *CSV) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(csv.Values())
 }
