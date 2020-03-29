@@ -12,24 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package zaprus wraps uber-go/zap functions with a logrus style API.
-package log
+package zephyrus
 
 import (
-	"context"
 	"testing"
-
-	"go.uber.org/zap"
 )
 
 func TestLog(t *testing.T) {
-	ctx := context.Background()
-	zapLogger, _ := zap.NewProduction()
-	defer zapLogger.Sync()
-	newCtx := NewLoggerWithContext(ctx, zapLogger)
 
-	// Fetching logger from Context
-	logger := NewLoggerFromContext(newCtx)
-	logger = logger.With(zap.Field{Key: "namespace", FieldType: "string", String: "csv"})
-	logger.With(zap.Field{Key: "count", Integer: 1}).Info("Logging new value")
 }

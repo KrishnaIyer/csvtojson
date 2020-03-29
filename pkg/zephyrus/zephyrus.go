@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package log provides commonly used logging functions by wrapping the uber-go/zap package.
-package log
+// Package zephyrus provides commonly used logging functions by wrapping the uber-go/zap package.
+package zephyrus
 
 import (
 	"context"
@@ -29,20 +29,32 @@ var loggerKey loggerKeyType = "logger"
 type Logger struct {
 	ctx    context.Context
 	logger *zap.Logger
-	fields map[string]Field
+	fields []zap.Field
+	err    error
 }
 
-//Options is the logger options.
+// Options is the logger options.
+// TODO: Adapt to zap.Options
 type Options struct {
 }
 
 // Field represents a logger field.
 type Field struct {
+	Key   string
+	Value interface{}
 }
 
 // New creates a new logger. Make sure to call defer logger.Clean() after calling this.
-func New(ctx context.Context) (*Logger, error) {
-	logger, err := zap.NewProduction()
+// TODO: Benchmarking
+func New(ctx context.Context, debug bool) (*Logger, error) {
+	config := zap.NewProductionConfig()
+	config.Encoding = "console"
+	if !debug {
+		config.DisableStacktrace = true
+		config.EncoderConfig.CallerKey = ""
+		config.EncoderConfig.TimeKey = ""
+	}
+	logger, err := config.Build()
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +69,8 @@ func (l *Logger) Clean() {
 	l.logger.Sync()
 }
 
-// NewLoggerWithContext returns a new context with a logger and panics if it doesn't match the interface.
-func NewLoggerWithContext(parentCtx context.Context, logger *Logger) context.Context {
+// NewContextWithLogger returns a new context with a logger and panics if it doesn't match the interface.
+func NewContextWithLogger(parentCtx context.Context, logger *Logger) context.Context {
 	if logger == nil {
 		panic("Nil Logger")
 	}
@@ -77,64 +89,46 @@ func NewLoggerFromContext(ctx context.Context) *Logger {
 
 // Debug logs a Debug level message.
 func (l *Logger) Debug(msg string) {
-
+	l.logger.With(l.fields...).Debug(msg)
 }
 
 // Info logs a Info level message.
 func (l *Logger) Info(msg string) {
-
+	l.logger.With(l.fields...).Info(msg)
 }
 
 // Warn logs a Warning level message.
 func (l *Logger) Warn(msg string) {
-
+	l.logger.With(l.fields...).Warn(msg)
 }
 
 // Error logs a Error level message.
 func (l *Logger) Error(msg string) {
-
+	l.logger.With(l.fields...).Error(msg)
 }
 
 // Fatal logs a Fatal message.
 func (l *Logger) Fatal(msg string) {
-
+	l.logger.With(l.fields...).Fatal(msg)
 }
 
-// Debugf logs a Debug level formatted message.
-func (l *Logger) Debugf(format string, v ...interface{}) {
-
+// WithField returns a logger with the provided field.
+func (l *Logger) WithField(key string, val interface{}) *Logger {
+	l.fields = append(l.fields, zap.Field{Key: key, Interface: val})
+	return l
 }
 
-// Infof logs a Info level formatted message.
-func (l *Logger) Infof(format string, v ...interface{}) {
-
-}
-
-// Warnf logs a Warning level formatted message.
-func (l *Logger) Warnf(format string, v ...interface{}) {
-
-}
-
-// Errorf logs a Error formatted message.
-func (l *Logger) Errorf(format string, v ...interface{}) {
-
-}
-
-// Fatalf logs a Fatal formatted message.
-func (l *Logger) Fatalf(format string, v ...interface{}) {
-
-}
-
-// WithField returns a logger with the fields.
-func (l *Logger) WithField(string, interface{}) Logger {
-
-}
-
-func (l *Logger) WithFields(Fields) Logger {
-
+// WithFields returns a logger with the providedfields.
+func (l *Logger) WithFields(fields []Field) *Logger {
+	for _, field := range fields {
+		l.fields = append(l.fields, zap.Field{Key: field.Key, Interface: field.Value})
+	}
+	return l
 }
 
 // WithError returns a logger with the current error padded.
-func (l *Logger) WithError(error) Logger {
-
+// TODO: How to append this error?
+func (l *Logger) WithError(err error) *Logger {
+	l.err = err
+	return l
 }
