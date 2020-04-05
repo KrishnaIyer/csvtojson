@@ -20,14 +20,19 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
-var errEmptyKey = errors.New("Empty Key")
+var (
+	errEmptyKey      = errors.New("Empty Key")
+	errEmptyCSV      = errors.New("Empty CSV File")
+	errSearchReplace = errors.New("Invalid search-replace pattern")
 
-var errEmptyCSV = errors.New("Empty CSV File")
+	replaceSeparator = ","
+)
 
 // CSV is the CSV file.
 type CSV struct {
@@ -38,10 +43,26 @@ type CSV struct {
 type Config struct {
 	AllowMalformed bool   `name:"allow-malformed" description:"allow parsing malformed CSV"`
 	FillEmptyWith  string `name:"fill-empty-with" description:"value to fill empty cells with. --allow-malformed must be set for this to be effective"`
+	ReplaceWith    string `name:"replace-with" description:"simple text find and replace. Usage --replace-with <search>,<replacement>"`
 }
 
 // New parses the byte slice and creates a new CSV object.
 func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
+	var r *regexp.Regexp
+	var replacement string
+	replaceWith := config.ReplaceWith
+	if replaceWith != "" {
+		s := strings.Split(replaceWith, replaceSeparator)
+		if len(s) != 2 {
+			return nil, errSearchReplace
+		}
+		var err error
+		r, err = regexp.Compile(s[0])
+		if err != nil {
+			return nil, errSearchReplace
+		}
+		replacement = s[1]
+	}
 	reader := csv.NewReader(strings.NewReader(string(raw)))
 	if config.AllowMalformed {
 		reader.FieldsPerRecord = -1 // This allows variable number of columns per row.
@@ -64,6 +85,14 @@ func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
 			if j >= noOfcolumns {
 				value[keys[j]] = config.FillEmptyWith
 				continue
+			}
+			// Find and replace if enabled
+			if r != nil {
+				val := r.ReplaceAllString(readValues[i][j], replacement)
+				if val != "" {
+					value[keys[j]] = val
+					continue
+				}
 			}
 			value[keys[j]] = readValues[i][j]
 		}

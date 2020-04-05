@@ -46,6 +46,7 @@ func TestCSV(t *testing.T) {
 		FillEmptyWith  string
 		CheckValues    func([]map[string]string) bool
 		ExpectedError  bool
+		ReplaceWith    string
 	}{
 		{
 			Name:      "Valid",
@@ -73,11 +74,18 @@ func TestCSV(t *testing.T) {
 				return val[0]["last_name"] == ""
 			},
 		},
+		{
+			Name:        "SearchAndReplace",
+			Input:       validCSV,
+			Marshaled:   `[{"first_name":"Roc","last_name":"Pike","username":"roc"},{"first_name":"Ken","last_name":"Thompson","username":"ken"},{"first_name":"Rocert","last_name":"Griesemer","username":"gri"}]`,
+			ReplaceWith: "ob,oc",
+		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
 			csv, err := New(ctx, []byte(tc.Input), Config{
 				AllowMalformed: tc.AllowMalformed,
 				FillEmptyWith:  tc.FillEmptyWith,
+				ReplaceWith:    tc.ReplaceWith,
 			})
 			if !tc.ExpectedError {
 				if !assert.Nil(t, err) {
