@@ -14,13 +14,14 @@ $ go get -u go.krishnaiyereaswaran.com/csvtojson
 csvtojson [flags]
 
 Flags:
-      --allow-malformed          allow parsing malformed CSV
-  -c, --csv-file string          input csv file name
-  -d, --debug                    print detailed logs for errors
-      --fill-empty-with string   value to fill empty cells with. --allow-malformed must be set for this to be effective
-  -h, --help                     help for csvtojson
-  -o, --out-file string          output file name. Use yaml or json based on the required format.
-      --yaml                     marshal to yaml instead of json
+  -c, --csv-file string                 input csv file name
+  -d, --debug                           print detailed logs for errors
+  -h, --help                            help for csvtojson
+  -o, --out-file string                 output file name. Use yaml or json based on the required format.
+      --values.allow-malformed          allow parsing malformed CSV
+      --values.fill-empty-with string   value to fill empty cells with. --allow-malformed must be set for this to be effective
+      --values.replace-with string      simple text find and replace. Usage --replace-with <search>,<replacement>
+      --yaml                            marshal to yaml instead of json
 ```
 
 

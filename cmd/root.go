@@ -58,7 +58,7 @@ var (
 				logger.Fatal(err.Error())
 			}
 			loggerCtx := zephyrus.NewContextWithLogger(ctx, logger)
-			csv, err := csv.New(loggerCtx, raw, config.Parse)
+			csv, err := csv.New(loggerCtx, raw, config.Values)
 			if err != nil {
 				logger.Fatal(err.Error())
 			}
@@ -97,6 +97,7 @@ func Execute() {
 }
 
 func init() {
-	manager = conf.New("config", *config)
+	manager = conf.New("config")
+	manager.InitFlags(*config)
 	Root.PersistentFlags().AddFlagSet(manager.Flags())
 }

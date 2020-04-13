@@ -32,11 +32,11 @@ const (
 
 // Config represents the configuration
 type Config struct {
-	CSVFile string `name:"csv-file" short:"c" description:"input csv file name"`
-	OutFile string `name:"out-file" short:"o" description:"output file name. Use yaml or json based on the required format."`
-	Debug   bool   `name:"debug" short:"d" description:"print detailed logs for errors"`
-	YAML    bool   `name:"yaml" description:"marshal to yaml instead of json"`
-	Parse   csv.Config
+	CSVFile string     `name:"csv-file" short:"c" description:"input csv file name"`
+	OutFile string     `name:"out-file" short:"o" description:"output file name. Use yaml or json based on the required format."`
+	Debug   bool       `name:"debug" short:"d" description:"print detailed logs for errors"`
+	YAML    bool       `name:"yaml" description:"marshal to yaml instead of json"`
+	Values  csv.Config `name:"values"`
 }
 
 // Manager is the configuration manager.
@@ -47,40 +47,35 @@ type Manager struct {
 }
 
 // New returns a new initialized manager with the given config.
-func New(name string, cfg Config) *Manager {
-	flags := pflag.NewFlagSet(name, pflag.ExitOnError)
+func New(name string) *Manager {
 	viper := viper.New()
 	viper.AllowEmptyEnv(true)
 	viper.AutomaticEnv()
 	viper.SetConfigName(name)
 
+	return &Manager{
+		name:  name,
+		flags: pflag.NewFlagSet(name, pflag.ExitOnError),
+		viper: viper,
+	}
+}
+
+// InitFlags initializes the flagset with the provided config.
+func (mgr *Manager) InitFlags(cfg Config) error {
 	rootStruct := reflect.TypeOf(cfg)
 
 	if rootStruct.Kind() != reflect.Struct {
 		panic("configuration is not a struct")
 	}
 
-	// Parse the root struct separately
-	flags.AddFlagSet(parseStructToFlags(rootStruct))
+	mgr.parseStructToFlags("", rootStruct)
 
-	// Find embedded structs and parse them. This currently only works one level deep.
-	for i := 0; i < rootStruct.NumField(); i++ {
-		fieldT := rootStruct.Field(i).Type
-		if fieldT.Kind() == reflect.Struct {
-			flags.AddFlagSet(parseStructToFlags(fieldT))
-		}
-	}
-
-	err := viper.BindPFlags(flags)
+	err := mgr.viper.BindPFlags(mgr.flags)
 	if err != nil {
 		panic(err)
 	}
 
-	return &Manager{
-		name:  name,
-		flags: flags,
-		viper: viper,
-	}
+	return nil
 }
 
 // Flags returns pflag.FlagSet.
@@ -97,7 +92,9 @@ func (mgr *Manager) Unmarshal(config interface{}) error {
 	if err != nil {
 		return err
 	}
-	return decoder.Decode(mgr.viper.AllSettings())
+
+	decoder.Decode(mgr.viper.AllSettings())
+	return nil
 }
 
 // Viper returns viper.
@@ -107,27 +104,32 @@ func (mgr *Manager) Viper() *viper.Viper {
 
 // parseStructToFlags parses a struct and returns a flagset.
 // It panics if there are parsing errors.
-func parseStructToFlags(strT reflect.Type) *pflag.FlagSet {
-	flags := pflag.FlagSet{}
+func (mgr *Manager) parseStructToFlags(prefix string, strT reflect.Type) {
 	for i := 0; i < strT.NumField(); i++ {
 		field := strT.Field(i)
 		name := field.Tag.Get("name")
-		if name == "" || name == "-" {
+		kind := field.Type.Kind()
+		if (name == "" || name == "-") && kind != reflect.Struct {
 			continue
 		}
 
 		desc := field.Tag.Get("description")
 		short := field.Tag.Get("short")
 
-		fieldKind := field.Type.Kind()
-		switch fieldKind {
+		if prefix != "" {
+			name = prefix + "." + name
+		}
+
+		switch kind {
 		case reflect.String:
-			flags.StringP(name, short, "", desc)
+			mgr.flags.StringP(name, short, "", desc)
 		case reflect.Bool:
-			flags.BoolP(name, short, false, desc)
+			mgr.flags.BoolP(name, short, false, desc)
+		case reflect.Struct:
+			// This allows for recursion
+			mgr.parseStructToFlags(name, field.Type)
 		default:
-			panic(fmt.Errorf("Unknown type in config: %v", fieldKind))
+			panic(fmt.Errorf("Unknown type in config: %v", kind))
 		}
 	}
-	return &flags
 }

@@ -17,9 +17,16 @@ package zephyrus
 
 import (
 	"context"
+	"reflect"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+var reflectTypeToZapFieldType = map[reflect.Kind]zapcore.FieldType{
+	reflect.String: zapcore.StringType,
+	reflect.Int64:  zapcore.Int64Type,
+}
 
 type loggerKeyType string
 
@@ -61,6 +68,7 @@ func New(ctx context.Context, debug bool) (*Logger, error) {
 	return &Logger{
 		ctx:    ctx,
 		logger: logger,
+		fields: make([]zap.Field, 0),
 	}, nil
 }
 
@@ -114,7 +122,15 @@ func (l *Logger) Fatal(msg string) {
 
 // WithField returns a logger with the provided field.
 func (l *Logger) WithField(key string, val interface{}) *Logger {
-	l.fields = append(l.fields, zap.Field{Key: key, Interface: val})
+	fieldType := reflectTypeToZapFieldType[reflect.TypeOf(val).Kind()]
+	switch fieldType {
+	case zapcore.StringType:
+		l.fields = append(l.fields, zap.Field{Key: key, String: val.(string), Type: fieldType})
+	case zapcore.Int64Type:
+		l.fields = append(l.fields, zap.Field{Key: key, Integer: val.(int64), Type: fieldType})
+	default:
+		// Skip this since we don't know the type
+	}
 	return l
 }
 

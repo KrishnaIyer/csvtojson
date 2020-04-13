@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/KrishnaIyer/csvtojson/pkg/zephyrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,6 +49,7 @@ type Config struct {
 
 // New parses the byte slice and creates a new CSV object.
 func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
+	logger := zephyrus.NewLoggerFromContext(ctx)
 	var r *regexp.Regexp
 	var replacement string
 	replaceWith := config.ReplaceWith
@@ -57,7 +59,9 @@ func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
 			return nil, errSearchReplace
 		}
 		var err error
-		r, err = regexp.Compile(s[0])
+		pattern := s[0]
+		logger.WithField("pattern", pattern).Info("Using search pattern")
+		r, err = regexp.Compile(pattern)
 		if err != nil {
 			return nil, errSearchReplace
 		}
@@ -76,7 +80,6 @@ func New(ctx context.Context, raw []byte, config Config) (*CSV, error) {
 	}
 
 	values := make([]map[string]string, 0)
-
 	for i := 1; i < len(readValues); i++ {
 		keys := readValues[0]
 		value := make(map[string]string)
