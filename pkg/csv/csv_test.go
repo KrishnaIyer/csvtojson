@@ -16,8 +16,10 @@ package csv
 
 import (
 	"context"
+	"log"
 	"testing"
 
+	"github.com/KrishnaIyer/csvtojson/pkg/zephyrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,6 +40,11 @@ Ken,Thompson,ken
 
 func TestCSV(t *testing.T) {
 	ctx := context.Background()
+	logger, err := zephyrus.New(ctx, false)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	loggerCtx := zephyrus.NewContextWithLogger(ctx, logger)
 	for _, tc := range []struct {
 		Name           string
 		Input          string
@@ -82,7 +89,7 @@ func TestCSV(t *testing.T) {
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
-			csv, err := New(ctx, []byte(tc.Input), Config{
+			csv, err := New(loggerCtx, []byte(tc.Input), Config{
 				AllowMalformed: tc.AllowMalformed,
 				FillEmptyWith:  tc.FillEmptyWith,
 				ReplaceWith:    tc.ReplaceWith,
