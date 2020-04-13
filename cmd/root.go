@@ -57,8 +57,8 @@ var (
 			if err != nil {
 				logger.Fatal(err.Error())
 			}
-
-			csv, err := csv.New(ctx, raw, config.Parse)
+			loggerCtx := zephyrus.NewContextWithLogger(ctx, logger)
+			csv, err := csv.New(loggerCtx, raw, config.Parse)
 			if err != nil {
 				logger.Fatal(err.Error())
 			}
