@@ -100,4 +100,5 @@ func init() {
 	manager = conf.New("config")
 	manager.InitFlags(*config)
 	Root.PersistentFlags().AddFlagSet(manager.Flags())
+	Root.AddCommand(Version(Root))
 }
