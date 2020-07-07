@@ -1,4 +1,4 @@
-name: Go Test
+name: buildandtest
 on: 
   push:
     paths:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: BuildAndTest
+    name: buildandtest
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.14
