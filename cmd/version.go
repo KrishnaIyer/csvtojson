@@ -34,7 +34,7 @@ func Version(root *cobra.Command) *cobra.Command {
 		Short: "Display version information",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("%s\n", root.Name())
-			fmt.Println("-----------------")
+			fmt.Println("--------------")
 			fmt.Printf("Version: %s\n", version)
 			fmt.Printf("Git Commit: %s\n", gitCommit)
 			fmt.Printf("Build Date: %s\n", buildDate)
