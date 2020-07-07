@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/KrishnaIyer/csvtojson/cmd"
+	"go.krishnaiyer.dev/csvtojson/cmd"
 )
 
 func main() {

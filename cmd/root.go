@@ -20,9 +20,9 @@ import (
 	"log"
 	"os"
 
-	conf "github.com/KrishnaIyer/csvtojson/pkg/config"
-	"github.com/KrishnaIyer/csvtojson/pkg/csv"
-	"github.com/KrishnaIyer/csvtojson/pkg/zephyrus"
+	conf "go.krishnaiyer.dev/csvtojson/pkg/config"
+	"go.krishnaiyer.dev/csvtojson/pkg/csv"
+	"go.krishnaiyer.dev/csvtojson/pkg/zephyrus"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ var (
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		Short:         "csvtojson is a simple command line tool to parse CSV files and convert them to JSON",
-		Long:          `csvtojson is a simple command line tool to parse CSV files and convert them to JSON. More documentation at https://github.com/KrishnaIyer/csvtojson`,
+		Long:          `csvtojson is a simple command line tool to parse CSV files and convert them to JSON. More documentation at https://go.krishnaiyer.dev/csvtojson`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			err := manager.Unmarshal(config)
 			if err != nil {

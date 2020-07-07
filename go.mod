@@ -1,4 +1,4 @@
-module github.com/KrishnaIyer/csvtojson
+module go.krishnaiyer.dev/csvtojson
 
 go 1.13
 

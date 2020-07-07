@@ -3,7 +3,10 @@
 VERSION=v0.0.1
 GIT_COMMIT=$(shell git rev-parse --short HEAD)
 DATE=$(shell date)
-PACKAGE="github.com/KrishnaIyer/csvtojson"
+PACKAGE="go.krishnaiyer.dev/csvtojson"
+
+test:
+	go test -v 
 
 build:
 	go build \

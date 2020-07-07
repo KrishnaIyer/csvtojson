@@ -19,7 +19,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/KrishnaIyer/csvtojson/pkg/zephyrus"
+	"go.krishnaiyer.dev/csvtojson/pkg/zephyrus"
 	"github.com/stretchr/testify/assert"
 )
 

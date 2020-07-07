@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/KrishnaIyer/csvtojson/pkg/zephyrus"
+	"go.krishnaiyer.dev/csvtojson/pkg/zephyrus"
 	"gopkg.in/yaml.v2"
 )
 

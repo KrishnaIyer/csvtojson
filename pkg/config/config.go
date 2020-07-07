@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/KrishnaIyer/csvtojson/pkg/csv"
+	"go.krishnaiyer.dev/csvtojson/pkg/csv"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
