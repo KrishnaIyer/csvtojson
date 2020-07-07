@@ -2,6 +2,8 @@
 
 A simple command line utility to parse csv files and convert them to JSON/YML.
 
+![Status Checks](https://github.com/krishnaiyer/csvtojson/workflows/BuildAndTest/badge.svg)
+
 ## Installation
 
 ```

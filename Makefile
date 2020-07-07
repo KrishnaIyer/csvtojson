@@ -6,7 +6,7 @@ DATE=$(shell date)
 PACKAGE="go.krishnaiyer.dev/csvtojson"
 
 test:
-	go test -v 
+	go test ./... -cover
 
 build:
 	go build \
