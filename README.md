@@ -10,6 +10,8 @@ A simple command line utility to parse csv files and convert them to JSON/YML.
 $ go get -u go.krishnaiyer.dev/csvtojson
 ```
 
+There are also various binaries available for different machines on the releases page.
+
 ## Usage
 
 ```

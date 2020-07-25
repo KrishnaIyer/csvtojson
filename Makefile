@@ -1,15 +1,18 @@
 .PHONY: build
 
-VERSION=v0.0.1
-GIT_COMMIT=$(shell git rev-parse --short HEAD)
-DATE=$(shell date)
-PACKAGE="go.krishnaiyer.dev/csvtojson"
+C2J_VERSION=v0.0.1
+C2J_GIT_COMMIT=$(shell git rev-parse --short HEAD)
+C2J_DATE=$(shell date)
+C2J_PACKAGE="go.krishnaiyer.dev/csvtojson"
 
 test:
 	go test ./... -cover
 
 build:
 	go build \
-	-ldflags="-X '${PACKAGE}/cmd.version=${VERSION}' \
-	-X '${PACKAGE}/cmd.gitCommit=${GIT_COMMIT}' \
-	-X '${PACKAGE}/cmd.buildDate=${DATE}'" main.go
+	-ldflags="-X '${C2J_PACKAGE}/cmd.version=${C2J_VERSION}' \
+	-X '${C2J_PACKAGE}/cmd.gitCommit=${C2J_GIT_COMMIT}' \
+	-X '${C2J_PACKAGE}/cmd.buildDate=${C2J_DATE}'" main.go
+
+clean:
+	rm -rf dist

@@ -1,0 +1,64 @@
+project_name: csvtojson
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+- id: csvtojson
+  env:
+    - CGO_ENABLED=0
+  ldflags:
+    - -X go.krishnaiyer.dev/csvtojson/cmd.version={{.Version}}
+    - -X go.krishnaiyer.dev/csvtojson/cmd.gitCommit={{.Commit}}
+    - -X go.krishnaiyer.dev/csvtojson/cmd.buildDate={{.Date}}
+  goos:
+    - darwin
+    - linux
+    - windows
+  goarch:
+    - 386
+    - amd64
+    - arm
+    - arm64
+  goarm:
+    - 6
+    - 7
+
+archives:
+- id: tar
+  builds:
+    - csvtojson
+  replacements:
+    darwin: darwin
+    linux: linux
+    windows: windows
+  files:
+    - LICENSE
+    - README.md
+  format: tar.gz
+- id: zip
+  builds:
+    - csvtojson
+  replacements:
+    darwin: darwin
+    linux: linux
+    windows: windows
+  files:
+    - LICENSE
+    - README.md
+  wrap_in_directory: true
+  format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-dev"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'

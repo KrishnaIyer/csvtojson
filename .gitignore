@@ -1,1 +1,3 @@
 main
+dist*
+.DS_Store*
