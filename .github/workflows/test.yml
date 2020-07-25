@@ -16,6 +16,6 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
     - name: Build
-      run: make build
+      run: make build.local
     - name: Run package tests
       run: make test
